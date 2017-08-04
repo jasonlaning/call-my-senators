@@ -16,18 +16,21 @@ function getMembers() {
 	state.senatorVotes = [];
 	state.senatorHTML = [];
 	var settings = {
-		'async': true,
-		'crossDomain': true,
-		'url': 'https://api.propublica.org/congress/v1/members/senate/' + state.queryTerm + '/current.json',
-		'method': 'GET',
-		'headers': {
-			'x-api-key': apiKey,
+		url: 'https://artseen-nyc-api.herokuapp.com/api/members',
+		method: 'POST',
+		data: JSON.stringify({
+			url: 'https://api.propublica.org/congress/v1/members/senate/' + state.queryTerm + '/current.json',
+		}),
+		contentType: "application/json",
+		headers: {
+			'X-API-Key': apiKey,
   		}
 	}
 
 	$.ajax(settings).done(function (response) {
-		if (response.results.length > 0) {
-			getMemberData(response.results, settings);
+		console.log(response);
+		if (response.result.results.length > 0) {
+			getMemberData(response.result.results, settings);
 		}
 		else {
 			displaySenatorHTML('');
@@ -38,25 +41,33 @@ function getMembers() {
 // use senator IDs to get biographical data
 function getMemberData(members, settings) {
 	var settingsBios = {
-		url: '',
+		url: 'https://artseen-nyc-api.herokuapp.com/api/members',
+		method: 'POST',
+		data: {},
+		contentType: "application/json",
 		headers: {
-			'x-api-key': apiKey,
+			'X-API-Key': apiKey,
   		}
 	};
 	var settingsVotes = {
-		url: '',
+		url: 'https://artseen-nyc-api.herokuapp.com/api/members',
+		method: 'POST',
+		data: {},
+		contentType: "application/json",
 		headers: {
-			'x-api-key': apiKey,
+			'X-API-Key': apiKey,
   		}
 	};
 	
 	for (var i = 0; i < members.length; i++) {
-		settingsBios.url = 'https://api.propublica.org/congress/v1/members/' + members[i].id + '.json';
-		settingsVotes.url = 'https://api.propublica.org/congress/v1/members/' + members[i].id + '/votes.json';
+		settingsBios.data = JSON.stringify({url: 'https://api.propublica.org/congress/v1/members/' + 
+			members[i].id + '.json'});
+		settingsVotes.data = JSON.stringify({url: 'https://api.propublica.org/congress/v1/members/' + 
+			members[i].id + '/votes.json'});
 
 		$.when($.ajax(settingsBios), $.ajax(settingsVotes)).done(function (responseBios, responseVotes) {
-				state.senatorBios.push (responseBios[0].results);
-				state.senatorVotes.push (responseVotes[0].results);			
+				state.senatorBios.push(responseBios[0].result.results);
+				state.senatorVotes.push(responseVotes[0].result.results);			
 				if (state.senatorBios.length === members.length) {
 					getSenatorHTML(state.senatorBios, state.senatorVotes)
 					displaySenatorHTML(state.senatorHTML);	
